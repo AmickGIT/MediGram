@@ -1,0 +1,5 @@
+flask==2.3.3
+werkzeug==2.3.7
+pymupdf==1.23.0
+groq==0.4.0
+flask-cors==4.0.0 

@@ -1,10 +1,83 @@
-To run the website, perform the following steps:
+# MediGram
 
-Step 1: In chatbot_models folder: Run main.py, main1.py, prescription_reader.py in dedicated terminals. Then in cnn_models folder: Run load_models.py
+A comprehensive platform for mental health support and medical image analysis, featuring chatbots, report analysis, prescription reading, and brain tumor detection using deep learning.
 
-Step 2: Run signup.js, then enter a real email id. A confirmation email will be sent to the email entered by you, click on it(It will give error). Then go to login.js and enter the credentials again. You can choose to go to patient or doctor dashboard.
+## Features
+- **Mental Health Chatbot:** Chat with an AI-powered mental health assistant.
+- **Report Analysis:** Upload and analyze medical reports.
+- **Prescription Reader:** Extract information from prescription images.
+- **Brain Tumor Detection:** Upload brain scans for AI-based tumor detection.
+- **Role-based Dashboards:** Separate dashboards for patients and doctors.
 
-Step 3: (Patient) You can chat with the mental health bot, use Report analysis and Prescription Reader(you can upload sample reports in chatbot_models/uploads)
+## Getting Started
 
-(Doctor) You can select the Brain Tumor model from the dropdown, then add the test images from cnn_models/Sample_Pictures/Brain_Tumor. You can check by uploading images from Tumor and No tumor images to test the accuracy of our model. 
+### Prerequisites
+- Python 3.x
+- Node.js & npm (for frontend)
+- (Optional) Virtual environment for Python
+- All required Python and Node.js packages (see requirements.txt/package.json if available)
+
+### Setup Instructions
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd MediGram
+   ```
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Install Node.js dependencies (if applicable):**
+   ```bash
+   cd <frontend-folder>
+   npm install
+   ```
+
+## Usage Guide
+
+### Step 1: Start Backend Services
+- In the `chatbot_models` folder, run the following scripts in dedicated terminals:
+  - `main.py`
+  - `main1.py`
+  - `prescription_reader.py`
+- In the `cnn_models` folder, run:
+  - `load_models.py`
+
+### Step 2: User Signup & Login
+- Run `signup.js` and enter a real email address.
+- A confirmation email will be sent; click the link (it may show an error, but proceed).
+- Go to `login.js` and log in with your credentials.
+- Choose to access either the patient or doctor dashboard.
+
+### Step 3: Platform Usage
+- **Patient Dashboard:**
+  - Chat with the mental health bot.
+  - Use report analysis and prescription reader (upload sample reports in `chatbot_models/uploads`).
+- **Doctor Dashboard:**
+  - Select the Brain Tumor model from the dropdown.
+  - Add test images from `cnn_models/Sample_Pictures/Brain_Tumor`.
+  - Upload images (Tumor/No Tumor) to test the model's accuracy.
+
+## Folder Structure
+```
+MediGram/
+├── chatbot_models/
+│   ├── main.py
+│   ├── main1.py
+│   ├── prescription_reader.py
+│   └── uploads/
+├── cnn_models/
+│   ├── load_models.py
+│   └── Sample_Pictures/
+├── <frontend-folder>/
+│   ├── signup.js
+│   └── login.js
+└── README.md
+```
+
+## Contributing
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+[Add your license here]
 

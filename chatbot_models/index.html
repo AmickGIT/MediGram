@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Report Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+            color: #666;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: none;
+            line-height: 1.5;
+        }
+        .analysis-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .analysis-section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .section-content {
+            color: #333;
+            margin-left: 10px;
+            line-height: 1.6;
+        }
+        .raw-analysis {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .abnormal {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .normal {
+            color: #27ae60;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Medical Report Analyzer</h1>
+
+    <div class="container">
+        <div class="form-group">
+            <label for="reportFile">Upload Medical Report (PDF):</label>
+            <input type="file" id="reportFile" accept=".pdf">
+        </div>
+        <button id="analyzeBtn" onclick="analyzeReport()">Analyze Report</button>
+        <div id="loading">
+            <p>Analyzing report, please wait... This may take a few minutes.</p>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function analyzeReport() {
+            const fileInput = document.getElementById('reportFile');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            // Validate file
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select a PDF file');
+                return;
+            }
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            // Show loading indicator
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            analyzeBtn.disabled = true;
+            
+            try {
+                // Send request to API
+                const response = await fetch('http://localhost:5000/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Process response
+                const data = await response.json();
+                console.log("Response data:", data); // Log to see the structure
+                
+                if (data.success) {
+                    // Display results
+                    result.innerHTML = formatAnalysis(data);
+                } else {
+                    result.innerHTML = `<p>Error: ${data.message || 'Analysis failed'}</p>`;
+                }
+                
+                result.style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                result.innerHTML = `<p>Error: ${error.message || 'Failed to connect to server'}</p>`;
+                result.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+        
+        function formatAnalysis(response) {
+            let html = '<h2>Analysis Results</h2>';
+            
+            // Access the raw analysis directly
+            if (response.analysis && response.analysis.raw_analysis) {
+                const rawAnalysis = response.analysis.raw_analysis;
+                
+                html += '<div class="analysis-section">';
+                html += '<div class="section-title">Raw Analysis</div>';
+                html += `<div class="section-content">${rawAnalysis.replace(/\n/g, '<br>')}</div>`;
+                html += '</div>';
+                
+                // Try to extract and display sections
+                const extractedSections = extractSectionsFromRawAnalysis(rawAnalysis);
+                
+                Object.entries(extractedSections).forEach(([title, content]) => {
+                    if (title && content && title !== 'Analysis') {
+                        html += '<div class="analysis-section">';
+                        html += `<div class="section-title">${title}</div>`;
+                        html += `<div class="section-content">${formatSectionContent(content)}</div>`;
+                        html += '</div>';
+                    }
+                });
+            }
+            // Check for sections
+            else if (response.analysis && response.analysis.sections && Object.keys(response.analysis.sections).length > 0) {
+                const sections = response.analysis.sections;
+                
+                for (const [title, content] of Object.entries(sections)) {
+                    html += '<div class="analysis-section">';
+                    html += `<div class="section-title">${title}</div>`;
+                    html += `<div class="section-content">${formatSectionContent(content)}</div>`;
+                    html += '</div>';
+                }
+            }
+            // If we can't find the raw analysis or sections directly in the response
+            else if (response.analysis) {
+                html += '<div class="analysis-section">';
+                html += '<div class="section-title">Analysis</div>';
+                html += `<div class="section-content">Unable to display analysis in a structured format.</div>`;
+                html += '</div>';
+            }
+            
+            return html;
+        }
+        
+        // Function to format section content with highlighting
+        function formatSectionContent(content) {
+            if (!content) return '';
+            
+            // Highlight abnormal values
+            content = content.replace(/(\d+(\.\d+)?\s*(g\/dL|mg\/dL|U\/L|cells\/mm3|%|mmol\/L|ng\/mL)?\s*\(Low\s*[^)]*\))/gi, 
+                '<span class="abnormal">$1</span>');
+            content = content.replace(/(\d+(\.\d+)?\s*(g\/dL|mg\/dL|U\/L|cells\/mm3|%|mmol\/L|ng\/mL)?\s*\(High\s*[^)]*\))/gi, 
+                '<span class="abnormal">$1</span>');
+            content = content.replace(/(\d+(\.\d+)?\s*(g\/dL|mg\/dL|U\/L|cells\/mm3|%|mmol\/L|ng\/mL)?\s*\(Normal\s*[^)]*\))/gi, 
+                '<span class="normal">$1</span>');
+                
+            // Highlight diagnoses
+            content = content.replace(/(diagnosed with|positive for|evidence of)\s+([^.,]+)/gi, 
+                '$1 <span class="highlight">$2</span>');
+                
+            return content.replace(/\n/g, '<br>');
+        }
+        
+        // Function to extract sections from raw analysis text
+        function extractSectionsFromRawAnalysis(rawText) {
+            const sections = {};
+            
+            if (!rawText) {
+                sections['Analysis'] = 'No content available';
+                return sections;
+            }
+            
+            // Try to extract sections based on markdown-like headings
+            const sectionMatches = rawText.match(/\*\*(.*?)\*\*([\s\S]*?)(?=\*\*|$)/g);
+            
+            if (sectionMatches && sectionMatches.length > 0) {
+                sectionMatches.forEach(section => {
+                    const titleMatch = section.match(/\*\*(.*?)\*\*/);
+                    if (titleMatch && titleMatch[1]) {
+                        const title = titleMatch[1].trim();
+                        const content = section.replace(/\*\*(.*?)\*\*/, '').trim();
+                        if (title && content) {
+                            sections[title] = content;
+                        }
+                    }
+                });
+            } else {
+                // Fallback if no section markers found
+                sections['Analysis'] = rawText;
+            }
+            
+            return sections;
+        }
+    </script>
+</body>
+</html> 
